@@ -247,6 +247,27 @@ resource "aws_route_table" "private" {
   )
 }
 
+resource "aws_route" "private_nat_gateway" {
+  count = local.create_vpc && var.enable_nat_gateway  && length(var.private_subnets) > 0 ? 1 : 0
+
+  route_table_id         = aws_route_table.private[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_nat_gateway.this[0].id
+
+  timeouts {
+    create = "5m"
+  }
+}
+
+resource "aws_route" "private_nat_gateway_ipv6" {
+  count = local.create_vpc && var.create_igw && var.enable_ipv6 && length(var.public_subnets) > 0 ? 1 : 0
+
+  route_table_id              = aws_route_table.private[0].id
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id                  = aws_nat_gateway.this[0].id
+}
+
+
 ################################################################################
 # Database routes
 ################################################################################
